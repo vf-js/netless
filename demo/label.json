@@ -1,0 +1,193 @@
+{
+  "assets": {
+    "1": {
+      "type": "image",
+      "url": "https://vipkid-edu.github.io/vf-examples/assets/dino.png",
+      "name": "1"
+    }
+  },
+  "global": {},
+  "scenes": [
+    {
+      "id": 0,
+      "libId": "0"
+    }
+  ],
+  "components": {
+    "0": {
+      "type": "custom",
+      "interactabled": false,
+      "children": [
+        {
+          "id": 1,
+          "libId": 1,
+          "style": {
+            "top": 0
+          }
+        },
+        {
+          "id": "label1",
+          "libId": 2,
+          "style": {
+            "top": 160,
+            "fontSize":14
+          },
+          "text": "文本标签接口示例"
+        },
+        {
+          "id": "label2",
+          "libId": 2,
+          "text": "手动换行，\n文本！",
+          "width": 200,
+          "style": {
+            "top": 200,
+            "left": 20,
+            "color": [
+              16777215,
+              16763904
+            ],
+            "justifyContent": "flex-start",
+            "fontSize": 32
+          }
+        },
+        {
+          "id": "label3",
+          "libId": 2,
+          "text": "自动换行文本设置 wordWrap = true , wordWrapWidth = width 开启自动换行。",
+          "style": {
+            "top": 290,
+            "color": [
+              16777215,
+              65433
+            ],
+            "fontSize": 30,
+            "wordWrap": true,
+            "wordWrapWidth": 400
+          }
+        },
+        {
+          "id": "label4",
+          "libId": 2,
+          "text": "我是有滤镜的文字",
+          "style": {
+            "top": 400,
+            "color": [
+              16777215,
+              65433
+            ],
+            "stroke": 4855888,
+            "strokeThickness": 5,
+            "dropShadow": true,
+            "dropShadowColor": "#000000",
+            "dropShadowBlur": 1,
+            "dropShadowAngle": 0.5235987755982988,
+            "dropShadowDistance": 1
+          }
+        },
+        {
+          "id": "label5",
+          "libId": 2,
+          "text": "我设定了textAlign与verticalAlign",
+          "style": {
+            "top": 440,
+            "left": 80,
+            "color": 16777215,
+            "width": 450,
+            "height": 50,
+            "verticalAlign": "middle",
+            "textAlign": "center",
+            "backgroundColor": 4095
+          }
+        },
+        {
+          "id": "label6",
+          "libId": 2,
+          "text": "下划线示例\n我设定了textAlign与verticalAlign 换行换行，",
+          "style": {
+            "top": 500,
+            "left": 10,
+            "width": 300,
+            "color": 16777215,
+            "textAlign": "center",
+            "wordWrap": true,
+            "wordWrapWidth": 200,
+            "backgroundColor": 4095,
+            "textDecoration": "UnderLine",
+            "textDecorationColor": 16711850
+          }
+        },
+        {
+          "id": "label7",
+          "libId": 2,
+          "text": "good dood study day day up",
+          "style": {
+            "top": 630,
+            "left": 10,
+            "width": 300,
+            "color": [
+              16711680,
+              65280,
+              255,
+              16776960,
+              16711935,
+              65535
+            ],
+            "textAlign": "center",
+            "linearGradientType": "horizontal",
+            "linearGradientStops": [
+              0.1,
+              0.4,
+              0.5,
+              0.7,
+              0.8,
+              1
+            ]
+          }
+        },
+        {
+          "id": "label8",
+          "libId": 2,
+          "width": 200,
+          "style": {
+            "top": 200,
+            "justifyContent": "flex-end",
+            "fontFamily": "fontUrl"
+          },
+          "text": "font change"
+        }
+      ]
+    },
+    "1": {
+      "type": "Image",
+      "width": 83,
+      "height": 138,
+      "src": 1,
+      "style": {
+        "justifyContent": "center"
+      }
+    },
+    "2": {
+      "type": "Label",
+      "width": 100,
+      "style": {
+        "justifyContent": "center"
+      }
+    },
+    "3": {
+      "type": "Button",
+      "width": 100,
+      "height": 50,
+      "up": 4,
+      "down": 6,
+      "move": 5
+    }
+  },
+  "name": "VFT2J",
+  "width": 405,
+  "height": 720,
+  "version": "0.0.1",
+  "baseUrl": "",
+  "loadMode": "all",
+  "conversion": "",
+  "scaleMode": "showAll"
+}
