@@ -9,7 +9,8 @@
 		"start": "npm run dev & npm run server",
 		"dev": "webpack --config config/webpack.dev.js --watch",
 		"server": "node ./config/server.js",
-		"release": "webpack --config config/webpack.prod.js"
+		"release": "webpack --config config/webpack.prod.js",
+		"upload": "node config/upload.js"
 	},
 	"files": [
 		"dist/netless.min.js",
