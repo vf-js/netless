@@ -72,7 +72,7 @@ class Main {
                 }
                 break;
             case 'AttributesUpdate':
-                this.attributes = data.attributes;
+                this.attributes = data.attributes || data;
                 break;
             case 'GetAttributes':
                 break;
