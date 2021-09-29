@@ -10,7 +10,7 @@
     <meta name="screen-orientation" content="portrait" />
     <meta name="x5-fullscreen" content="true" />
     <meta name="360-fullscreen" content="true" />
-    <title>vf - netless</title>
+    <title><%= htmlWebpackPlugin.options.title %></title>
     <style>
         html,
         body {
@@ -29,10 +29,9 @@
 
 <body>
     <!-- 播放器的容器，调整播放器大小，可以改变这里 -->
-    <!-- <div id="vf-container"
+    <div id="vf-container"
         style="background:rgb(255, 255, 255);width: 100%; height: 100%;padding:0;margin:0;overflow: hidden; position: absolute;">
-    </div> -->
-    <p style="position: absolute;" onclick="alert('aaaa')">aaaaaa</p>
+    </div>
 </body>
 <!-- <script src="./dist/netless.js"></script> -->
 </html>

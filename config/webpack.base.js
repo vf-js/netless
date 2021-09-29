@@ -5,6 +5,7 @@ const path = require('path');
 const webpack = require('webpack');
 const package = require('../package.json');
 const common = require('./common');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
     mode: 'development',
@@ -30,7 +31,7 @@ module.exports = {
         filename: '[name].js',
         libraryTarget: 'umd',
         library: 'vf.netless',
-        path: path.resolve(__dirname),
+        path: path.resolve(__dirname, '../dist'),
     },
     plugins: [
         new webpack.ProgressPlugin(),
@@ -39,7 +40,12 @@ module.exports = {
             VFBUILDDATE: JSON.stringify(new Date().toLocaleString()),
             VERSION: JSON.stringify(package.version),
         }),
+        new HtmlWebpackPlugin({
+            title: 'vf - netless',
+            filename: path.join(__dirname, '../dist/index.html'),
+            template:  path.join(__dirname, '../index.html'),
+        }),
     ],
 };
 
-module.exports.entry[`../dist/netless`] = './src/index.ts';
+module.exports.entry[`./netless`] = './src/index.ts';

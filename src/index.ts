@@ -1,39 +1,39 @@
+/* eslint-disable no-unused-expressions */
 /* eslint-disable max-len */
 import { createVF, IPlayer } from '@vf.js/launcher';
-
-const enum SyncType {
-    'live' = 'live',
-    'history' = 'history',
-}
-const platform = {
-    from: 'debug',
-    role: 1,
-    roomid: '1',
-    userid: 1,
-};
+import { dispatch, pageTo, platform, register, setAttributes, setPage, StateType, SyncType, getQueryVariable } from './common';
 
 class Main {
     constructor() {
         this.initEvent();
-        this.initVF();
     }
 
     private player?: IPlayer;
-    private isScene = false;
-    private reciveList: any[] = [];
+    private state = StateType.INIT;
+    private curPage = 0;
+    private attributes: { [key: string]: any } = {};
+    private url = '';
+    private debug = false;
+    private total = 0;
 
     private initEvent(): void {
+        this.url = getQueryVariable('url') || '';
+        this.debug = Boolean(getQueryVariable('debug')) || false;
+        this.total = Number(getQueryVariable('total')) || 100;
         window.addEventListener('message', this.reciveMsg.bind(this));
-        parent.postMessage({
-            kind: 'RegisterMagixEvent',
-            payload: 'syncEvent', // 注册对要接收事件的监听，同一个事件只会监听一次
-        }, '*');
+        register('syncEvent');
+        // 后面可以通过URL参数传入具体总页数，先临时写这里
+        setPage(this.total);
     }
 
     private initVF(): void {
+        if (this.state !== StateType.INIT) {
+            return;
+        }
+        this.state = StateType.LOAD;
         createVF({
             container: document.getElementById('vf-container') as any,
-            version: '2.0.7',
+            version: '2.0.9',
             usePlayer: true,
             platform,
             vfvars: {
@@ -42,320 +42,144 @@ class Main {
                 mode: 1, // 模式  1-预览  2-直播   3-回放
             },
         }, (player) => {
+            this.state = StateType.LOADED;
             this.player = player as IPlayer;
             const _player = player as IPlayer;
 
             _player.onError = this.onError.bind(this);
             _player.onMessage = this.onMessage.bind(this);
             _player.onSceneCreate = this.onSceneCreate.bind(this);
-            _player.switchToSceneIndex(2);
-            _player.play('./demo/editor.json');
+            _player.switchToSceneIndex(this.curPage);
+            _player.play(this.url);
 
-            // setTimeout(() => {
-            //     (_player as any).switchToSceneIndex(2);
-            // }, 3000);
+            this.test();
         });
     }
 
     private reciveMsg(msg: any): void {
-        console.log('parent', msg);
+        const data = msg.data.payload;
+        const _player = this.player;
+
+        if (window.self === window.top) {
+            this.initVF();
+
+            return;
+        }
         switch (msg.data.kind) {
-            case 'Init':
-                break;
             case 'ReciveMagixEvent':
-            //this.message(msg.data.)
+                if (data.payload.code === 'syncEvent') {
+                    this.message(data.payload.data, SyncType.live);
+                }
                 break;
             case 'AttributesUpdate':
-
+                this.attributes = data.attributes;
                 break;
             case 'GetAttributes':
-
+                break;
+            case 'Init':
+                this.curPage = data.attributes.curPage || (data.currentPage - 1);
+                this.attributes = data.attributes;
+                platform.userid = data.observerId;
+                this.initVF();
                 break;
             case 'RoomStateChanged':
-                // if (o.sceneState) {
-                //     var n = o.sceneState;
-                //     this.emit(l.StateSyncEvent.PageChange, n)
-                // }
+                // eslint-disable-next-line no-case-declarations
+                const newIndex = data.sceneState.index;
+
+                if (this.curPage !== newIndex) {
+                    this.curPage = newIndex;
+                    if (_player) {
+                        _player.switchToSceneIndex(newIndex);
+                    }
+                }
                 break;
         }
     }
 
-    private message(msg: vf.IEvent): void {
+    private message(msg: any, syncType: SyncType): void {
         const _player = this.player as IPlayer;
 
-        if (this.isScene && _player.stage) {
-            _player.stage.sendToPlayer(msg);
-        }
-        else {
-            const data = {
-                type: SyncType.history,
-                data: msg,
-            };
-
-            this.reciveList.push(data);
+        if (this.state === StateType.READY && _player.stage && _player.stage.syncManager) {
+            _player.stage.syncManager.receiveEvent(msg, syncType);
         }
     }
 
+    /**
+     * player 推送出来的消息，一般需要发送到信令服务器
+     * @param msg 消息
+     *
+     *  这里要考虑数据量的问题，要讨论在退回上页是否需要保留恢复上页状态
+     *
+     *  如果需要清理处理，可以在每次切换场景时，清理数据
+     *
+     *  key = 场景index_time_observerId; // 第一期不加observerId
+     */
     private onMessage(msg: vf.IEvent): void {
         if (msg.code === 'syncEvent') { // 同步数据
-            console.log('我发送了数据');
-            parent.postMessage({
-                kind: 'DispatchMagixEvent',
-                payload: {
-                    event: 'syncEvent', // 要发送到事件名称
-                    payload: msg, // 事件内容
-                },
-            }, '*');
+            dispatch(msg);
 
-            setTimeout(() => {
-                parent.postMessage({
-                    kind: 'DispatchMagixEvent',
-                    payload: {
-                        event: 'syncEvent', // 要发送到事件名称
-                        payload: {msg:"xxxxx"}, // 事件内容
-                    },
-                }, '*');
-            }, 5000);
+            const payload = {} as any;
+            const key = `${this.curPage}_${Date.now()}`;
+
+            payload[key] = msg.data;
+            setAttributes(payload);
         }
     }
 
     private onSceneCreate(msg: vf.IEvent): void {
-        const _player = this.player as IPlayer;
+        this.state = StateType.READY;
+        if (this.curPage !== msg.data.index) {
+            pageTo(msg.data.index);
+            setAttributes({ curPage: msg.data.index });
+        }
+        const historyData = {} as any;
+        const attributes = this.attributes;
+        const sceneIndexStr = msg.data.index.toString();
+        const len = sceneIndexStr.length;
+        let isHistory = false;
 
-        this.isScene = true;
-        if (_player.stage && _player.stage.syncManager) {
-            _player.stage.syncManager.sendCustomEvent({
-                code: 'customEvent',
-                level: 'command',
-                data: msg,
-            });
-
-            if (this.reciveList.length > 0) {
-                const item = {
-                    level: 'command',
-                    code: 'syncEvent',
-                    data: this.reciveList.concat(),
-                };
-
-                this.reciveList.length = 0;
-                _player.stage.sendToPlayer(item);
+        for (const key in attributes) {
+            if (key.substr(0, len) === sceneIndexStr) {
+                historyData[attributes[key].code] = attributes[key];
+                isHistory = true;
             }
+        }
+
+        if (isHistory) {
+            this.message(historyData, SyncType.history);
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private onError(msg: vf.IEvent): void {
-        console.error(msg);
+        // console.error(msg);
+    }
+
+    private test(): void {
+        if (!this.debug) {
+            return;
+        }
+        const _player = this.player;
+
+        const div = document.createElement('div');
+
+        div.style.position = 'absolute';
+        div.innerHTML = `
+            <button id="button0">上一页</button>
+            <button id="button1">下一页</button>
+        `;
+        document.body.appendChild(div);
+
+        document.getElementById('button0')?.addEventListener('click', () => {
+            _player && _player.switchToPrevScene();
+        });
+
+        document.getElementById('button1')?.addEventListener('click', () => {
+            _player && _player.switchToNextScene();
+        });
     }
 }
 
-new Main();
+const main = new Main();
 
-//       this.player.sendToStage({
-//         level: "command",
-//         code: "syncEvent",
-//         data: eventData,
-//       });
-
-//       this.player.sendToStage({
-//         level: "command",
-//         code: "syncEvent",
-//         data: eventData,
-//       });
-
-// player.onSceneLoad = function (e) {
-//     console.log('onSceneLoad', e); // 资源加载完成
-//     const pageIndex = e.data.index;
-
-//     // if(that.lastPageIndex != pageIndex) {
-//     //   that.player && that.player.switchToSceneIndex(that.lastPageIndex)
-//     // }
-//     if ((that.pageNumber - 1) !== pageIndex) {
-//         // that.initData()
-//         that.$store.commit('setPageIndex', pageIndex);
-//         if (that.role != constData.ROLE_VAL.TEACHER) {
-//             return;
-//         }
-//         console.log('xxxx, signal');
-//         //  vf有自动翻页不能仅靠slider控制
-//         //  vf通过抛出changepage事件去控制vfloder翻页，但仍然要通过信令通知信令去告诉学生端页码变更，恢复历史或者初始加载场景
-//         signal.sendSignalData({
-//             cmd: 'broadcast_store',
-//             action: 'merge',
-//             data: {
-//                 action: 'turn',
-//                 templateType: 'page',
-//                 pageIndex,
-//                 role: this.role,
-//             },
-//         }, true);
-//     }
-// };
-// player.onSceneCreate = function (e) {
-//     console.log('getStyle', e, document.getElementById('vfApp').getElementsByTagName('canvas')[0].style);
-//     const videoList = e.data.videoList;
-
-//     if (videoList && videoList.length) {
-//         const newList = [];
-
-//         videoList.forEach((item) => {
-//             const newItem = item.toDomRectangle();
-
-//             console.log('newList', item);
-//             // return {
-//             //   ...item,
-//             //   ...newItem
-//             // }
-//             //  x:left, y:top,
-//             const { _src: source, _src: src, _autoplay: autoplay, _audio: audio, _video: dom, fullscreen, id, isPlaying, name, poster, _silent: silent, zIndex } = item;
-//             const {
-//                 x: left, y: top, width, height,
-//             } = newItem;
-
-//             console.log('itemeeee', item);
-//             newList.push(
-//                 {
-//                     left,
-//                     top,
-//                     source,
-//                     autoplay,
-//                     audio,
-//                     width,
-//                     height,
-//                     display: 'block',
-//                     fullscreen: false,
-//                     height: item._lastPostion.height,
-//                     id,
-//                     isPlaying: false,
-//                     name,
-//                     poster,
-//                     silent,
-//                     src,
-//                     width: item._lastPostion.width,
-//                     zIndex,
-//                 },
-//             );
-//         });
-//         console.log('videoList', videoList, videoList[0].audio, videoList[0]._audio, newList);
-//         that.$store.commit('setTangramVideo', newList);
-//     }
-//     else {
-//         that.$store.commit('setTangramVideo', null);
-//     }
-
-//     that.initCanvasStyle();
-//     that.initData();
-//     console.log('onSceneCreate', e.data.index, that.pageNumber, that.lastPageIndex); // 资源加载完成
-//     const pageIndex = e.data.index;
-
-//     if ((that.pageNumber - 1) !== pageIndex) {
-//         // that.initData()
-//     }
-
-//     console.log('onSceneCreate', e); // 资源加载完成
-// };
-
-// player.onMessage = function (vfData) {
-//     console.log('vfData', vfData);
-//     if (vfData.code == 'LoadProgress') {
-//         // 伪进度
-//         if (vfData.data[0] / 100 < 1) {
-//             that.loaded = vfData.data[0] / 100;
-//         }
-//     }
-//     if (vfData.code == 'native') {
-//         // 播放、暂停声音
-//         const data = vfData.data;
-
-//         if (data.type == 'playAudio') {
-//             that.playAudio(data.src, data.mode, data.signalling);
-//         }
-//         else if (data.type == 'pauseAudio') {
-//             that.pauseAudio();
-//         }
-//     }
-//     else if (vfData.code == 'syncEvent') {
-//         console.log('syncEvent', vfData);
-//         that.sendSignalData(vfData.data.code, vfData.data, 300);
-//         // 发送同步事件，包括了底层的输入操作事件和自定的同步事件
-//     }
-//     else if (vfData.code == 'chooseOption') {
-//         // KB分支发送答题事件
-//         that.chooseOption(
-//             vfData.data.totalCount,
-//             vfData.data.isRight,
-//             vfData.data.isFinish,
-//             vfData.data.signalling,
-//         );
-//     }
-//     that.logErr(vfData);
-// };
-
-// player.onError = function (evt) {
-//     console.log('onError ==>', evt);
-//     if (evt && evt.code == 404) {
-//         console.log('evt', evt);
-//     }
-// };
-
-// player.onDispose = function () {
-//     console.log('onDispose');
-// };
-// const json = dataManager.lessonJSON.content;
-
-// console.log('json', json);
-// that.player.switchToSceneIndex(that.pageIndex);
-// that.player.play(json);
-
-/**
-     * 接收信令
-     * @param type: 信令类型  history-历史信令   live-实时信令
-     * @param data: data
-     */
-//   postMessage(type, data) {
-//     let eventData = { type: type };
-//     if (type === "history") {
-//       //模板刚加载完成，必然会跑一次history
-//       let { historyObj } = data;
-//       eventData.data = historyObj;
-//     } else if (type === "live") {
-//       let { val } = data;
-//       eventData.data = val;
-//     }
-//     console.log('postMessage', type, data)
-//     //将信令发送至stage-syncManager统一处理
-//     this.player && this.player.sendToStage &&
-//       this.player.sendToStage({
-//         level: "command",
-//         code: "syncEvent",
-//         data: eventData,
-//       });
-//   },
-
-/**
- * restore,slider中点击重置按钮时调用，恢复模板到初始状态
- */
-//  restoreVF() {
-//     //暂停声音
-//     this.pauseAudio();
-//     if (this.player) {
-//       //重置引擎
-//       this.player.stage.syncInteractiveFlag = false;
-//       this.player.reset();
-//       this.player.stage.syncInteractiveFlag = true;
-//     }
-//     this.initData();
-//   },
-
-// /**
-//  * 初始化逻辑变量，没有历史信令，或者restore时调用
-//  */
-//     initData() {
-//     if (this.isTeacher) {
-//         let eventData = {
-//         level: "command",
-//         code: "initData",
-//         data: "",
-//         };
-//         this.player && this.player.message(eventData);
-//     }
-//     },
+export { main };

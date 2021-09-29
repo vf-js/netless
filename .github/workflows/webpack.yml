@@ -27,4 +27,3 @@ jobs:
         npm install
         npm run release
         npm run upload accessKeyId=${{ secrets.ACCESSKEYID }} accessKeySecret=${{ secrets.ACCESSKEYSECRET }}
-        node ./config/dingding.js
