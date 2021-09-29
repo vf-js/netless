@@ -4,7 +4,6 @@
 const path = require('path');
 const webpack = require('webpack');
 const package = require('../package.json');
-const common = require('./common');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
