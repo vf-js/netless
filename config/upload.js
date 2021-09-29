@@ -40,7 +40,7 @@ class Yun {
 
             for (const key in files) {
                 const newKey = `/platform/netless/v1/${key}`;
-                const bool = await this.$isExistObject(newKey);
+                const bool = false;// await this.$isExistObject(newKey);
 
                 if (!bool) {
                     const r1 = await this.client.put(newKey, files[key].fullname);
