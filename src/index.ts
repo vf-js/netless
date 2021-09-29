@@ -33,7 +33,7 @@ class Main {
         this.state = StateType.LOAD;
         createVF({
             container: document.getElementById('vf-container') as any,
-            version: '2.0.9',
+            version: '2.0.10',
             usePlayer: true,
             platform,
             vfvars: {
