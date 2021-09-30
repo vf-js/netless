@@ -10,16 +10,36 @@ class Main {
 
     private player?: IPlayer;
     private state = StateType.INIT;
-    private curPage = 0;
+    /**
+     * 记录信令状态列表
+     */
     private attributes: { [key: string]: any } = {};
+    /**
+     * 当前的页数
+     */
+    private curPage = 0;
+    /**
+     * json的URL
+     */
     private url = '';
-    private debug = false;
+    /**
+     * 场景总页数
+     */
     private total = 0;
+    /**
+     * 是否开启调试
+     */
+    private debug = false;
+    /**
+     * 是否展示帧率
+     */
+    private showFPS = false;
 
     private initEvent(): void {
         this.url = getQueryVariable('url') || '';
         this.debug = Boolean(getQueryVariable('debug')) || false;
         this.total = Number(getQueryVariable('total')) || 100;
+        this.showFPS = Boolean(getQueryVariable('showFPS')) || false;
         window.addEventListener('message', this.reciveMsg.bind(this));
         register('syncEvent');
         // 后面可以通过URL参数传入具体总页数，先临时写这里
@@ -35,6 +55,8 @@ class Main {
             container: document.getElementById('vf-container') as any,
             version: '2.0.10',
             usePlayer: true,
+            debug: this.debug,
+            showFPS: this.showFPS,
             platform,
             vfvars: {
                 syncInteractiveFlag: true,
