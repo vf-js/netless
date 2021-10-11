@@ -78,6 +78,7 @@ class Main {
         });
     }
 
+    private innitRoomStateChanged = true;
     private reciveMsg(msg: any): void {
         const data = msg.data.payload;
         const _player = this.player;
@@ -105,6 +106,11 @@ class Main {
                 this.initVF();
                 break;
             case 'RoomStateChanged':
+                if (this.innitRoomStateChanged) {
+                    this.innitRoomStateChanged = false;
+
+                    return;
+                }
                 // eslint-disable-next-line no-case-declarations
                 const newIndex = data.sceneState.index;
 
