@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable max-len */
 import { createVF, IPlayer } from '@vf.js/launcher';
-import { dispatch, pageTo, platform, register, setAttributes, setPage, StateType, SyncType, getQueryVariable } from './common';
+import { dispatch, pageTo, platform, register, setAttributes, StateType, SyncType, getQueryVariable } from './common';
 
 class Main {
     constructor() {
@@ -48,7 +48,8 @@ class Main {
         window.addEventListener('message', this.reciveMsg.bind(this));
         register('syncEvent');
         // 后面可以通过URL参数传入具体总页数，先临时写这里
-        setPage(this.total);
+        // setPage(this.total);
+        // this.initVF();
     }
 
     private initVF(): void {
@@ -58,7 +59,7 @@ class Main {
         this.state = StateType.LOAD;
         createVF({
             container: document.getElementById('vf-container') as any,
-            version: '2.0.10',
+            version: undefined as any,
             usePlayer: true,
             debug: this.debug,
             showFPS: this.showFPS,
@@ -78,7 +79,6 @@ class Main {
             _player.onError = this.onError.bind(this);
             _player.onMessage = this.onMessage.bind(this);
             _player.onSceneCreate = this.onSceneCreate.bind(this);
-            this.test();
 
             if (this.docKey !== '') {
                 const docUrl = await vf.utils.readFileSync(`https://www.yunkc.cn/rest/api/getDocByKey?docKey=${this.docKey}`, { responseType: 'json' });
@@ -100,7 +100,6 @@ class Main {
 
         _player.switchToSceneIndex(this.curPage);
         _player.play(urlorjson);
-
         this.test();
     }
 
@@ -126,7 +125,7 @@ class Main {
             case 'GetAttributes':
                 break;
             case 'Init':
-                this.curPage = data.attributes.curPage || (data.currentPage - 1);
+                this.curPage = data.attributes.curPage || data.currentPage;
                 this.attributes = data.attributes;
                 platform.userid = data.observerId;
                 this.initVF();
