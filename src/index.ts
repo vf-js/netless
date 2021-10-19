@@ -22,6 +22,9 @@ class Main {
      * json的URL
      */
     private url = '';
+    /**
+     * 从编辑器产生的dockey，与url互斥
+     */
     private docKey = '';
     /**
      * 场景总页数
