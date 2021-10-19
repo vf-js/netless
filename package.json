@@ -25,7 +25,7 @@
 		"@types/node": "^16.7.6",
 		"@typescript-eslint/eslint-plugin": "^2.14.0",
 		"@typescript-eslint/parser": "^2.14.0",
-		"@vf.js/launcher": "^2.0.10",
+		"@vf.js/launcher": "^2.0.11",
 		"ali-oss": "^6.16.0",
 		"eslint": "^6.8.0",
 		"eslint-plugin-typescript": "^0.14.0",

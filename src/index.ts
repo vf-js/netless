@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable max-len */
 import { createVF, IPlayer } from '@vf.js/launcher';
-import { dispatch, pageTo, platform, register, setAttributes, setPage, StateType, SyncType, getQueryVariable } from './common';
+import { dispatch, pageTo, platform, register, setAttributes, StateType, SyncType, getQueryVariable } from './common';
 
 class Main {
     constructor() {
@@ -23,6 +23,10 @@ class Main {
      */
     private url = '';
     /**
+     * 从编辑器产生的dockey，与url互斥
+     */
+    private docKey = '';
+    /**
      * 场景总页数
      */
     private total = 0;
@@ -37,13 +41,15 @@ class Main {
 
     private initEvent(): void {
         this.url = getQueryVariable('url') || '';
+        this.docKey = getQueryVariable('docKey') || '';
         this.debug = Boolean(getQueryVariable('debug')) || false;
         this.total = Number(getQueryVariable('total')) || 100;
         this.showFPS = Boolean(getQueryVariable('showFPS')) || false;
         window.addEventListener('message', this.reciveMsg.bind(this));
         register('syncEvent');
         // 后面可以通过URL参数传入具体总页数，先临时写这里
-        setPage(this.total);
+        // setPage(this.total);
+        // this.initVF();
     }
 
     private initVF(): void {
@@ -53,7 +59,7 @@ class Main {
         this.state = StateType.LOAD;
         createVF({
             container: document.getElementById('vf-container') as any,
-            version: '2.0.10',
+            version: undefined as any,
             usePlayer: true,
             debug: this.debug,
             showFPS: this.showFPS,
@@ -61,23 +67,43 @@ class Main {
             vfvars: {
                 syncInteractiveFlag: true,
                 role: platform.role === 1 ? 'T' : 'S',
-                mode: 1, // 模式  1-预览  2-直播   3-回放
+                mode: 1, // 模式  1-预览  2-直播   3-回放,
+                dockey: this.docKey,
             },
-        }, (player) => {
-            this.state = StateType.LOADED;
+        }, async (player) => {
             this.player = player as IPlayer;
+            this.state = StateType.LOADED;
+
             const _player = player as IPlayer;
 
             _player.onError = this.onError.bind(this);
             _player.onMessage = this.onMessage.bind(this);
             _player.onSceneCreate = this.onSceneCreate.bind(this);
-            _player.switchToSceneIndex(this.curPage);
-            _player.play(this.url);
 
-            this.test();
+            if (this.docKey !== '') {
+                const docUrl = await vf.utils.readFileSync(`https://www.yunkc.cn/rest/api/getDocByKey?docKey=${this.docKey}`, { responseType: 'json' });
+
+                if (docUrl && docUrl.code === '200') {
+                    const json = await vf.utils.readFileSync(docUrl.result, { responseType: 'json' });
+
+                    json && this.initPlay(json);
+                }
+            }
+            else {
+                this.initPlay(this.url);
+            }
         });
     }
 
+    private initPlay(urlorjson: any): void{
+        const _player = this.player as IPlayer;
+
+        _player.switchToSceneIndex(this.curPage);
+        _player.play(urlorjson);
+        this.test();
+    }
+
+    private innitRoomStateChanged = true;
     private reciveMsg(msg: any): void {
         const data = msg.data.payload;
         const _player = this.player;
@@ -99,12 +125,17 @@ class Main {
             case 'GetAttributes':
                 break;
             case 'Init':
-                this.curPage = data.attributes.curPage || (data.currentPage - 1);
+                this.curPage = data.attributes.curPage || data.currentPage;
                 this.attributes = data.attributes;
                 platform.userid = data.observerId;
                 this.initVF();
                 break;
             case 'RoomStateChanged':
+                if (this.innitRoomStateChanged) {
+                    this.innitRoomStateChanged = false;
+
+                    return;
+                }
                 // eslint-disable-next-line no-case-declarations
                 const newIndex = data.sceneState.index;
 
