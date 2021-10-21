@@ -46,10 +46,30 @@ class Main {
         this.total = Number(getQueryVariable('total')) || 100;
         this.showFPS = Boolean(getQueryVariable('showFPS')) || false;
         window.addEventListener('message', this.reciveMsg.bind(this));
+        window.addEventListener('resize', this.onResize.bind(this), false);
         register('syncEvent');
         // 后面可以通过URL参数传入具体总页数，先临时写这里
         // setPage(this.total);
         // this.initVF();
+    }
+
+    private lastW = '0';
+    private lastH = '0';
+    private onResize(): void {
+        const w = this.lastW;
+        const h = this.lastH;
+        const cw = document.body.clientWidth.toString();
+        const ch = document.body.clientHeight.toString();
+
+        if (w !== cw && h !== ch && this.player) {
+            const player = this.player as any;
+            const div = document.getElementById('vf-container') as any;
+            const app = player.app;
+            const stage = player.stage;
+            const config = player.config;
+
+            vf.gui.Utils.calculateUpdatePlayerSize(div, app, stage, config.width, config.height, config.scaleMode as any);
+        }
     }
 
     private initVF(): void {
@@ -95,7 +115,7 @@ class Main {
         });
     }
 
-    private initPlay(urlorjson: any): void{
+    private initPlay(urlorjson: any): void {
         const _player = this.player as IPlayer;
 
         _player.switchToSceneIndex(this.curPage);
