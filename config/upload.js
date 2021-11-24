@@ -39,7 +39,7 @@ class Yun {
             const files = common.getDirFile(localPath, './');
 
             for (const key in files) {
-                const newKey = `/platform/netless/v1/${key}`;
+                const newKey = `/platform/oasis/v1/${key}`;
                 const bool = false;// await this.$isExistObject(newKey);
 
                 if (!bool) {

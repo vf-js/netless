@@ -4,7 +4,7 @@
 const webpack = require('./webpack.base.js');
 
 webpack.mode = 'development'; // production , development
-// webpack.devtool = 'eval-source-map';
+webpack.devtool = 'eval-source-map';
 
 webpack.plugins.push(
     // new BundleAnalyzerPlugin({ //可视化调试页面

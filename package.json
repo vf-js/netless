@@ -1,10 +1,10 @@
 {
-	"name": "@vf.js/netless",
+	"name": "@vf.js/oasis",
 	"version": "1.0.0",
 	"status": "release",
 	"description": "",
-	"main": "dist/netless.min.js",
-	"types": "netless.d.ts",
+	"main": "dist/oasis.min.js",
+	"types": "oasis.d.ts",
 	"scripts": {
 		"start": "npm run dev & npm run server",
 		"dev": "webpack --config config/webpack.dev.js --watch",
@@ -13,7 +13,7 @@
 		"upload": "node config/upload.js"
 	},
 	"files": [
-		"dist/netless.min.js",
+		"dist/oasis.min.js",
 		"README.md"
 	],
 	"author": "ifyx <ifyx@qq.com>",
@@ -25,7 +25,7 @@
 		"@types/node": "^16.7.6",
 		"@typescript-eslint/eslint-plugin": "^2.14.0",
 		"@typescript-eslint/parser": "^2.14.0",
-		"@vf.js/launcher": "^2.0.11",
+		"@vf.js/launcher": "^2.0.12",
 		"ali-oss": "^6.16.0",
 		"eslint": "^6.8.0",
 		"eslint-plugin-typescript": "^0.14.0",
@@ -38,6 +38,5 @@
 		"url-loader": "^4.1.1",
 		"webpack": "^4.41.0",
 		"webpack-cli": "^3.3.8"
-	},
-	"dependencies": {}
+	}
 }

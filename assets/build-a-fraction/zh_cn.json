@@ -1,0 +1,19 @@
+{
+  "title": {
+    "value": "构建一个分数"
+  },
+  "chooseYourLevel": {
+    "value": "选择等级"
+  },
+  "scenes": {
+    "buildAFraction": {
+      "value": "构建一个分数"
+    },
+    "lab": {
+      "value": "实验室"
+    },
+    "mixedNumbers": {
+      "value": "带分数"
+    }
+  }
+}

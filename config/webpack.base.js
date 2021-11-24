@@ -29,7 +29,7 @@ module.exports = {
     output: {
         filename: '[name].js',
         libraryTarget: 'umd',
-        library: 'vf.netless',
+        library: 'vf.oasis',
         path: path.resolve(__dirname, '../dist'),
     },
     plugins: [
@@ -40,11 +40,11 @@ module.exports = {
             VERSION: JSON.stringify(package.version),
         }),
         new HtmlWebpackPlugin({
-            title: 'vf - netless',
+            title: 'vf - oasis',
             filename: path.join(__dirname, '../dist/index.html'),
             template:  path.join(__dirname, '../index.html'),
         }),
     ],
 };
 
-module.exports.entry[`./netless`] = './src/index.ts';
+module.exports.entry[`./oasis`] = './src/index.ts';
